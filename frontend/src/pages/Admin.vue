@@ -373,32 +373,29 @@
                         <h3 class="block text-sm font-medium text-gray-700 mb-2">Background Gallery (Carousel)</h3>
                         
                         <!-- Gallery Grid -->
-                        <div class="grid grid-cols-2 gap-4 mb-4">
-                            <div v-for="bg in backgrounds" :key="bg.id" class="group relative aspect-video rounded-lg overflow-hidden border border-gray-200 bg-gray-100">
-                                <img :src="`${api.defaults.baseURL}/backgrounds/${bg.id}`" class="w-full h-full object-cover">
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-4">
+                            <div v-for="bg in backgrounds" :key="bg.id" class="group relative aspect-video bg-slate-100 rounded-2xl overflow-hidden shadow-sm border border-gray-200">
+                                <img :src="`${api.defaults.baseURL}/backgrounds/${bg.id}`" class="w-full h-full object-cover transition duration-500 group-hover:scale-105" />
                                 
-                                <!-- Status Badge -->
-                                <div class="absolute top-2 left-2 z-10">
-                                    <span v-if="bg.is_active" class="px-2 py-1 bg-green-500 text-white text-[10px] font-bold rounded-full shadow-sm">Active</span>
-                                    <span v-else class="px-2 py-1 bg-gray-500 text-white text-[10px] font-bold rounded-full shadow-sm">Inactive</span>
-                                </div>
-
-                                <!-- Actions Overlay -->
-                                <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-2">
-                                    <button @click="toggleBackground(bg)" class="p-2 bg-white rounded-full hover:bg-gray-100 text-gray-700 shadow-sm transition transform hover:scale-105" title="Toggle Active">
-                                        <span v-if="bg.is_active">🚫</span>
-                                        <span v-else>✅</span>
-                                    </button>
-                                    <button @click="deleteBackground(bg.id)" class="p-2 bg-red-500 rounded-full hover:bg-red-600 text-white shadow-sm transition transform hover:scale-105" title="Delete">
-                                        🗑️
-                                    </button>
+                                <!-- Overlay -->
+                                <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex flex-col items-center justify-center space-y-3">
+                                    <span v-if="bg.is_active" class="text-emerald-400 font-bold text-sm bg-emerald-400/20 px-3 py-1 rounded-full backdrop-blur">Active</span>
+                                    
+                                    <div class="flex gap-2">
+                                         <button @click="toggleBackground(bg)" class="p-2 bg-white rounded-full text-slate-800 hover:bg-emerald-500 hover:text-white transition" title="Toggle Active">
+                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                         </button>
+                                         <button @click="deleteBackground(bg.id)" class="p-2 bg-white rounded-full text-red-500 hover:bg-red-500 hover:text-white transition" title="Delete">
+                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                         </button>
+                                    </div>
                                 </div>
                             </div>
 
                             <!-- Upload Card -->
-                            <label class="border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-green-500 hover:bg-green-50 transition aspect-video group">
-                                <span class="text-3xl mb-1 group-hover:scale-110 transition">➕</span>
-                                <span class="text-xs text-gray-500 font-bold">Add Image</span>
+                            <label class="border-2 border-dashed border-gray-300 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:border-emerald-500 hover:bg-emerald-50 transition aspect-video group bg-white">
+                                <span class="text-3xl mb-1 group-hover:scale-110 transition text-gray-400 group-hover:text-emerald-500">➕</span>
+                                <span class="text-xs text-gray-500 font-bold group-hover:text-emerald-700">Add Image</span>
                                 <input type="file" class="hidden" accept="image/*" @change="uploadBackgroundGallery">
                             </label>
                         </div>

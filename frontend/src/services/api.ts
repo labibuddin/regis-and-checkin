@@ -1,7 +1,7 @@
 import axios, { type AxiosInstance } from 'axios'
 
 const api: AxiosInstance = axios.create({
-    baseURL: `http://${window.location.hostname}:8080/api`,
+    baseURL: `/api`,
 })
 
 export default api
