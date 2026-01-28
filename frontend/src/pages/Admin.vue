@@ -413,6 +413,19 @@
 
       </div>
     </main>
+    
+    <!-- Global Modal -->
+    <BaseModal 
+      :is-open="modalState.isOpen"
+      :title="modalState.title"
+      :message="modalState.message"
+      :type="modalState.type"
+      :confirm-text="modalState.confirmText"
+      :cancel-text="modalState.cancelText"
+      @close="closeModalState"
+      @cancel="closeModalState"
+      @confirm="handleModalConfirm"
+    />
   </div>
 </template>
 
@@ -433,6 +446,7 @@ import {
   type ChartOptions
 } from 'chart.js'
 import { Bar, Line } from 'vue-chartjs'
+import BaseModal from '../components/BaseModal.vue'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, PointElement, LineElement)
 
@@ -484,6 +498,45 @@ const backgrounds = ref<BackgroundImage[]>([])
 const chartOptions: ChartOptions = {
     responsive: true,
     maintainAspectRatio: false
+}
+
+// Modal State Logic
+const modalState = reactive({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'success', // success, error, confirm
+    confirmText: 'OK',
+    cancelText: 'Batal',
+    onConfirm: null as Function | null
+})
+
+const closeModalState = () => {
+    modalState.isOpen = false
+    modalState.onConfirm = null
+}
+
+const handleModalConfirm = () => {
+    if (modalState.onConfirm) modalState.onConfirm()
+    closeModalState()
+}
+
+const showAlert = (title: string, message: string, type: 'success' | 'error' = 'success') => {
+    modalState.title = title
+    modalState.message = message
+    modalState.type = type
+    modalState.confirmText = 'OK'
+    modalState.isOpen = true
+}
+
+const showConfirm = (title: string, message: string, onConfirm: Function) => {
+    modalState.title = title
+    modalState.message = message
+    modalState.type = 'confirm'
+    modalState.confirmText = 'Ya, Hapus'
+    modalState.cancelText = 'Batal'
+    modalState.onConfirm = onConfirm
+    modalState.isOpen = true
 }
 
 const fetchStats = async () => {
@@ -547,8 +600,9 @@ const uploadBackgroundGallery = async (e: Event) => {
         await api.post('/admin/backgrounds', formData)
         fetchBackgrounds()
         input.value = '' // reset input
+        showAlert("Berhasil", "Background berhasil diupload!", 'success')
     } catch (err) {
-        alert("Upload failed")
+        showAlert("Gagal", "Upload gagal, silakan coba lagi.", 'error')
     }
 }
 
@@ -556,15 +610,19 @@ const toggleBackground = async (bg: BackgroundImage) => {
     try {
         await api.post(`/admin/backgrounds/${bg.id}/toggle`)
         fetchBackgrounds()
-    } catch (e) { alert("Failed to toggle") }
+    } catch (e) { showAlert("Gagal", "Gagal mengganti status background", 'error') }
 }
 
 const deleteBackground = async (id: string) => {
-    if(!confirm("Hapus background ini?")) return
-    try {
-        await api.delete(`/admin/backgrounds/${id}`)
-        fetchBackgrounds()
-    } catch (e) { alert("Failed to delete") }
+    showConfirm("Hapus Background?", "Apakah Anda yakin ingin menghapus background ini?", async () => {
+        try {
+            await api.delete(`/admin/backgrounds/${id}`)
+            fetchBackgrounds()
+            showAlert("Berhasil", "Background berhasil dihapus")
+        } catch (e) { 
+             showAlert("Gagal", "Gagal menghapus background", 'error')
+        }
+    })
 }
 
 let pollingInterval: ReturnType<typeof setInterval> | null = null
@@ -630,9 +688,9 @@ const fetchSettings = async () => {
 const saveActiveEvent = async () => {
     try {
         await api.post('/admin/settings/active-event', { event_id: settingsForm.activeEventId })
-        alert("Event aktif berhasil diperbarui!")
+        showAlert("Berhasil", "Event aktif berhasil diperbarui!")
     } catch (err) {
-        alert("Gagal update event aktif")
+        showAlert("Gagal", "Gagal update event aktif", 'error')
     }
 }
 
@@ -650,10 +708,10 @@ const uploadQRIS = async (event: Event) => {
         })
         // Refresh view
         settingsForm.qrisUrl = `${api.defaults.baseURL}/images/qris?t=${Date.now()}`
-        alert("QRIS berhasil diupload ke Database")
+        showAlert("Berhasil", "QRIS berhasil diupload ke Database")
     } catch (err: any) {
         console.error(err)
-        alert("Gagal upload QRIS: " + (err.response?.data?.message || err.message))
+        showAlert("Gagal", "Gagal upload QRIS: " + (err.response?.data?.message || err.message), 'error')
     }
 }
 
@@ -718,24 +776,26 @@ const updatePeserta = async () => {
         // Convert tahun_lahir to int
         const payload = { ...editPesertaForm, tahun_lahir: parseInt(editPesertaForm.tahun_lahir) }
         await api.put(`/admin/peserta/${editPesertaId.value}`, payload)
-        alert("Data peserta berhasil diupdate")
+        showAlert("Berhasil", "Data peserta berhasil diupdate")
         closeEditPesertaModal()
         fetchPeserta()
     } catch (err: any) {
         console.error(err)
-        alert("Gagal update peserta: " + (err.response?.data?.message || err.message))
+        showAlert("Gagal", "Gagal update peserta: " + (err.response?.data?.message || err.message), 'error')
     }
 }
 
 const deletePeserta = async (id: string) => {
-    if (!confirm("Yakin ingin menghapus peserta ini? Data tidak bisa dikembalikan.")) return
-    try {
-        await api.delete(`/admin/peserta/${id}`)
-        fetchPeserta()
-    } catch (err) {
-        console.error(err)
-        alert("Gagal menghapus peserta")
-    }
+    showConfirm("Hapus Peserta?", "Yakin ingin menghapus peserta ini? Data tidak bisa dikembalikan.", async () => {
+        try {
+            await api.delete(`/admin/peserta/${id}`)
+            fetchPeserta()
+            showAlert("Berhasil", "Peserta berhasil dihapus")
+        } catch (err) {
+            console.error(err)
+            showAlert("Gagal", "Gagal menghapus peserta", 'error')
+        }
+    })
 }
 
 const exportCSV = () => {
@@ -791,9 +851,10 @@ const submitKegiatan = async () => {
         
         closeModal()
         fetchKegiatan()
+        showAlert("Berhasil", "Data kegiatan berhasil disimpan")
     } catch (err: any) {
         console.error(err)
-        alert("Gagal menyimpan data: " + (err.response?.data?.message || err.message))
+        showAlert("Gagal", "Gagal menyimpan data: " + (err.response?.data?.message || err.message), 'error')
     }
 }
 
@@ -812,13 +873,15 @@ const editKegiatan = (item: Kegiatan) => {
 }
 
 const deleteKegiatan = async (id: string) => {
-    if(!confirm("Yakin hapus kegiatan ini?")) return
-    try {
-        await api.delete(`/admin/kegiatan/${id}`)
-        fetchKegiatan()
-    } catch (err) {
-        alert("Gagal menghapus")
-    }
+    showConfirm("Hapus Kegiatan?", "Yakin hapus kegiatan ini?", async () => {
+        try {
+            await api.delete(`/admin/kegiatan/${id}`)
+            fetchKegiatan()
+            showAlert("Berhasil", "Kegiatan berhasil dihapus")
+        } catch (err) {
+            showAlert("Gagal", "Gagal menghapus", 'error')
+        }
+    })
 }
 
 const closeModal = () => {

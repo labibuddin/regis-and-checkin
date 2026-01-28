@@ -1,8 +1,8 @@
 <template>
-  <div class="flex flex-col lg:flex-row min-h-screen">
+  <div class="flex flex-col lg:flex-row min-h-screen lg:h-screen lg:overflow-hidden">
     <!-- Left: Banner (Desktop 50%, Mobile Top) -->
     <!-- Left: Banner (Desktop 50%, Mobile Top) -->
-    <div class="lg:w-1/2 bg-green-900 relative h-64 lg:h-auto overflow-hidden group">
+    <div class="lg:w-1/2 bg-green-900 relative h-64 lg:h-full overflow-hidden group">
       <!-- Sliding Backgrounds -->
       <div v-if="hasCustomBg" class="absolute inset-0 flex transition-transform duration-700 ease-in-out" 
            :style="{ transform: `translateX(-${activeBgIndex * 100}%)` }">
@@ -34,7 +34,8 @@
     </div>
 
     <!-- Right: Form Area -->
-    <div class="lg:w-1/2 flex flex-col justify-center p-6 lg:p-12 bg-white">
+    <div class="lg:w-1/2 bg-white lg:h-full lg:overflow-y-auto no-scrollbar">
+      <div class="min-h-full flex flex-col justify-center p-6 lg:p-12">
       
       <!-- SUCCESS STATE -->
       <div v-if="successData" class="max-w-md mx-auto w-full text-center space-y-6">
@@ -72,7 +73,7 @@
           <p v-else class="text-gray-700">Silahkan datang ke Masjid Jogokariyan nanti.</p>
         </div>
 
-        <button @click="resetFlow" class="w-full py-3 bg-gray-200 rounded-xl font-semibold hover:bg-gray-300 transition">
+        <button @click="resetForm" class="w-full py-3 bg-gray-200 rounded-xl font-semibold hover:bg-gray-300 transition">
           Kembali
         </button>
       </div>
@@ -94,7 +95,7 @@
 
       <!-- EXISTING USER FLOW -->
       <div v-else-if="flow === 'existing'" class="max-w-md mx-auto w-full space-y-6">
-        <button @click="flow = 'choice'" class="text-gray-400 hover:text-gray-600 mb-4">&larr; Kembali</button>
+        <button @click="resetForm" class="text-gray-400 hover:text-gray-600 mb-4">&larr; Kembali</button>
         <h2 class="text-2xl font-bold">Cari Data Peserta</h2>
         
         <div class="space-y-4">
@@ -117,7 +118,7 @@
       <!-- NEW REGISTRATION FLOW -->
       <form v-else-if="flow === 'new'" @submit.prevent="submitRegister" class="max-w-md mx-auto w-full space-y-4">
         <div class="flex items-center justify-between mb-2">
-           <button type="button" @click="flow = 'choice'" class="text-gray-400 hover:text-gray-600">&larr; Kembali</button>
+           <button type="button" @click="resetForm" class="text-gray-400 hover:text-gray-600">&larr; Kembali</button>
            <h2 class="text-xl font-bold">Formulir Pendaftaran</h2>
         </div>
 
@@ -152,13 +153,13 @@
 
         <div>
            <label class="block text-xs font-bold text-gray-500 uppercase">No. Handphone (WA)</label>
-           <input v-model="form.no_hp" type="tel" required @input="debouncedCheck" :class="{'border-red-500': validationErrors.no_hp}" class="w-full p-3 rounded-lg border border-gray-300">
+           <input v-model="form.no_hp" type="tel" required @input="(e) => debouncedCheck(e, 'no_hp')" :class="{'border-red-500': validationErrors.no_hp}" class="w-full p-3 rounded-lg border border-gray-300">
            <p v-if="validationErrors.no_hp" class="text-xs text-red-500 mt-1">{{ validationErrors.no_hp }}</p>
         </div>
 
         <div>
            <label class="block text-xs font-bold text-gray-500 uppercase">Email</label>
-           <input v-model="form.email" type="email" @input="debouncedCheck" :class="{'border-red-500': validationErrors.email}" class="w-full p-3 rounded-lg border border-gray-300">
+           <input v-model="form.email" type="email" @input="(e) => debouncedCheck(e, 'email')" :class="{'border-red-500': validationErrors.email}" class="w-full p-3 rounded-lg border border-gray-300">
            <p v-if="validationErrors.email" class="text-xs text-red-500 mt-1">{{ validationErrors.email }}</p>
         </div>
         
@@ -200,6 +201,7 @@
 
       </form>
 
+      </div>
     </div>
   </div>
 </template>
@@ -291,25 +293,26 @@ const validationErrors = reactive<Record<string, string>>({})
 
 // Debounce logic
 let timeout: ReturnType<typeof setTimeout> | null = null
-const debouncedCheck = (e: Event) => {
+const debouncedCheck = (e: Event, field: string) => {
   const target = e.target as HTMLInputElement
+  // Clear error immediately on input
+  delete validationErrors[field]
+  
   if (timeout) clearTimeout(timeout)
   timeout = setTimeout(() => {
-    checkUniqueness(target.value)
+    checkUniqueness(target.value, field)
   }, 1000)
 }
 
-const checkUniqueness = async (val: string) => {
+const checkUniqueness = async (val: string, field: string) => {
   if (!val) return
   try {
-    const res = await api.get(`/check-existing?query=${val}`)
-    // API returns 409 if exists, 200 if available
-    // Actually my backend returns 200 for available, 409 for exists error json.
-    // Axios throws on 409 usually
+    await api.get(`/check-existing?query=${val}`)
+    // API returns 200 if available, ensure error is cleared
+    delete validationErrors[field]
   } catch (err: any) {
     if (err.response && err.response.status === 409) {
-      if (val.includes('@')) validationErrors.email = "Email sudah digunakan"
-      else validationErrors.no_hp = "No HP sudah digunakan"
+      validationErrors[field] = field === 'email' ? "Email sudah digunakan" : "No HP sudah digunakan"
     }
   }
 }
@@ -368,10 +371,29 @@ const handleSuccess = (data: Peserta) => {
   })
 }
 
-const resetFlow = () => {
+const resetForm = () => {
   successData.value = null
   flow.value = 'choice'
-  // reset form...
+  
+  // Clean Form
+  Object.assign(form, {
+    nama_lengkap: '',
+    panggilan: '',
+    jenis_kelamin: 'Laki-laki',
+    alamat_domisili: '',
+    no_hp: '',
+    email: '',
+    tahun_lahir: 2002
+  })
+
+  // Clean Search & Validation
+  searchQuery.value = ''
+  searchError.value = ''
+  Object.keys(validationErrors).forEach(k => delete validationErrors[k])
+  
+  if (fileInput.value) {
+     fileInput.value.value = '' // Clear file input
+  }
 }
 
 // Download Card Logic
@@ -404,5 +426,12 @@ const downloadCard = async () => {
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
 }
 </style>
