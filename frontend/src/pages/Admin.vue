@@ -1,12 +1,12 @@
 <template>
-  <div class="flex min-h-screen bg-gray-100 font-sans">
+  <div class="flex h-screen bg-gray-100 font-sans overflow-hidden">
     <!-- Sidebar -->
     <aside :class="['bg-gray-900 text-white flex-col fixed inset-y-0 z-30 transition-all duration-300 transform', isSidebarOpen ? 'translate-x-0 w-64' : '-translate-x-full w-64 md:translate-x-0 md:static md:flex']">
       <div class="p-6 font-bold text-xl tracking-wider border-b border-gray-800 flex justify-between items-center">
         <span>ADMIN</span>
         <button @click="isSidebarOpen = false" class="md:hidden text-gray-400 hover:text-white">✕</button>
       </div>
-      <nav class="flex-1 p-4 space-y-2">
+      <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
         <button @click="setView('dashboard')" :class="['w-full text-left px-4 py-3 rounded-lg transition', currentView === 'dashboard' ? 'bg-green-600 text-white' : 'text-gray-400 hover:bg-gray-800']">
           Dashboard
         </button>
@@ -19,6 +19,12 @@
         <button @click="setView('settings')" :class="['w-full text-left px-4 py-3 rounded-lg transition', currentView === 'settings' ? 'bg-green-600 text-white' : 'text-gray-400 hover:bg-gray-800']">
           Settings
         </button>
+        <div class="pt-4 border-t border-gray-800 mt-4">
+             <button @click="handleLogout" class="w-full text-left px-4 py-3 rounded-lg text-red-400 hover:bg-gray-800 hover:text-red-300 transition flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                Logout
+            </button>
+        </div>
       </nav>
       <div class="p-4 border-t border-gray-800">
         <router-link to="/check-in" class="block w-full text-center py-3 bg-indigo-600 rounded-lg font-bold hover:bg-indigo-500">
@@ -428,6 +434,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, onUnmounted, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import api from '../services/api'
 import {
   Chart as ChartJS,
@@ -486,6 +493,12 @@ interface Kegiatan {
 
 const currentView = ref('dashboard')
 const isSidebarOpen = ref(false)
+const router = useRouter()
+
+const handleLogout = () => {
+    localStorage.removeItem('token') // Clear persistent token
+    router.push('/login')
+}
 
 const dashboardStats = ref<Partial<DashboardStats>>({})
 const ageChartData = ref<ChartData<'bar'> | null>(null)

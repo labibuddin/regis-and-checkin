@@ -5,6 +5,7 @@ import (
 
 	"jogokariyan-backend/config"
 	"jogokariyan-backend/handlers"
+	"jogokariyan-backend/middleware"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -31,32 +32,36 @@ func main() {
 
 	// Peserta
 	api.Get("/check-existing", handlers.CheckExisting)
-	api.Post("/register", handlers.Register)
 	api.Get("/peserta", handlers.FindPeserta)
+	api.Post("/register", handlers.Register)
+	// Auth
+	api.Post("/login", handlers.Login)
 
 	// Admin
-	api.Get("/admin/peserta", handlers.GetPesertaList)
-	api.Put("/admin/peserta/:id", handlers.UpdatePeserta)
-	api.Delete("/admin/peserta/:id", handlers.DeletePeserta)
+	admin := api.Group("/admin", middleware.Protected())
+
+	admin.Get("/peserta", handlers.GetPesertaList)
+	admin.Put("/peserta/:id", handlers.UpdatePeserta)
+	admin.Delete("/peserta/:id", handlers.DeletePeserta)
 
 	// Event & Check-in
 	api.Get("/event/active", handlers.GetActiveEvent)
 	api.Post("/check-in", handlers.CheckIn)
 
 	// Admin Stats
-	api.Get("/admin/stats", handlers.GetDashboardStats)
+	admin.Get("/stats", handlers.GetDashboardStats)
 
 	// Kegiatan CRUD
-	api.Get("/admin/kegiatan", handlers.GetKegiatanList)
-	api.Post("/admin/kegiatan", handlers.CreateKegiatan)
-	api.Put("/admin/kegiatan/:id", handlers.UpdateKegiatan)
-	api.Delete("/admin/kegiatan/:id", handlers.DeleteKegiatan)
+	admin.Get("/kegiatan", handlers.GetKegiatanList)
+	admin.Post("/kegiatan", handlers.CreateKegiatan)
+	admin.Put("/kegiatan/:id", handlers.UpdateKegiatan)
+	admin.Delete("/kegiatan/:id", handlers.DeleteKegiatan)
 
 	// Settings
-	api.Get("/admin/settings", handlers.GetSettings)
-	api.Post("/admin/settings/active-event", handlers.SetActiveEvent)
-	api.Post("/admin/settings/qris", handlers.UploadQRIS)
-	api.Post("/admin/settings/background", handlers.UploadBackground)
+	admin.Get("/settings", handlers.GetSettings)
+	admin.Post("/settings/active-event", handlers.SetActiveEvent)
+	admin.Post("/settings/qris", handlers.UploadQRIS)
+	admin.Post("/settings/background", handlers.UploadBackground)
 	api.Get("/images/qris", handlers.GetQRISImage)
 	api.Get("/images/qris", handlers.GetQRISImage)
 	// api.Get("/images/background", handlers.GetBackgroundImage) // Deprecated
@@ -65,10 +70,10 @@ func main() {
 	api.Get("/backgrounds", handlers.GetActiveBackgrounds)
 	api.Get("/backgrounds/:id", handlers.GetBackgroundImage)
 
-	api.Get("/admin/backgrounds", handlers.GetBackgrounds)
-	api.Post("/admin/backgrounds", handlers.UploadBackgroundGallery)
-	api.Post("/admin/backgrounds/:id/toggle", handlers.ToggleBackgroundActive)
-	api.Delete("/admin/backgrounds/:id", handlers.DeleteBackground)
+	admin.Get("/backgrounds", handlers.GetBackgrounds)
+	admin.Post("/backgrounds", handlers.UploadBackgroundGallery)
+	admin.Post("/backgrounds/:id/toggle", handlers.ToggleBackgroundActive)
+	admin.Delete("/backgrounds/:id", handlers.DeleteBackground)
 
 	log.Fatal(app.Listen(":8080"))
 }

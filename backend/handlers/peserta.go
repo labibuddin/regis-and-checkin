@@ -5,6 +5,7 @@ import (
 	"jogokariyan-backend/config"
 	"jogokariyan-backend/models"
 	"jogokariyan-backend/utils"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -13,7 +14,7 @@ import (
 
 // CheckExisting checks if NoHP OR Email is already in use
 func CheckExisting(c *fiber.Ctx) error {
-	query := c.Query("query") // Can be no_hp or email
+	query := strings.TrimSpace(c.Query("query")) // Can be no_hp or email
 	if query == "" {
 		return utils.JSONError(c, 400, "Query parameter required")
 	}
@@ -78,7 +79,7 @@ func Register(c *fiber.Ctx) error {
 }
 
 func FindPeserta(c *fiber.Ctx) error {
-	query := c.Query("query")
+	query := strings.TrimSpace(c.Query("query"))
 	var peserta models.Peserta
 
 	err := config.DB.Where("no_hp = ? OR id::text = ?", query, query).First(&peserta).Error

@@ -5,6 +5,7 @@ import (
 	"jogokariyan-backend/config"
 	"jogokariyan-backend/models"
 	"jogokariyan-backend/utils"
+	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -45,6 +46,9 @@ func CheckIn(c *fiber.Ctx) error {
 	if err := c.BodyParser(&req); err != nil {
 		return utils.JSONError(c, 400, "Invalid request")
 	}
+
+	// Clean input
+	req.PesertaID = strings.TrimSpace(req.PesertaID)
 
 	// Get Active Event
 	var setting models.AppSettings
