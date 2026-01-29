@@ -28,7 +28,7 @@ cd ..
 
 echo "✅ All services started!"
 echo "Backend: http://localhost:8080"
-echo "Frontend: http://localhost:1966"
+echo "Frontend: http://localhost:3000"
 echo "Database: localhost:5432"
 echo ""
 echo "Press Ctrl+C to stop everything."

@@ -6,9 +6,9 @@ import (
 	"jogokariyan-backend/models"
 	"jogokariyan-backend/utils"
 	"strings"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -68,8 +68,13 @@ func Register(c *fiber.Ctx) error {
 	}
 
 	// Create in DB
-	peserta.ID = uuid.New() // Generate UUID manually if needed or let DB do it. Letting GORM do it is safer if configured.
-	// But let's set it to be sure for the response
+	// Generate Custom ID: MJ[I/A][timestamp]
+	timestamp := time.Now().Format("20060102150405")
+	genderCode := "I" // Default Laki-laki
+	if peserta.JenisKelamin == "Perempuan" {
+		genderCode = "A"
+	}
+	peserta.ID = fmt.Sprintf("MJ%s%s", genderCode, timestamp)
 
 	if result := config.DB.Create(&peserta); result.Error != nil {
 		return utils.JSONError(c, 500, result.Error.Error())

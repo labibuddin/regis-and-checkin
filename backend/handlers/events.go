@@ -62,9 +62,9 @@ func CheckIn(c *fiber.Ctx) error {
 	var peserta models.Peserta
 	var errPeserta error
 
-	// Check if input is UUID
-	if _, err := uuid.Parse(req.PesertaID); err == nil {
-		// Is UUID
+	// Check if input is ID (MJ prefix) or Phone Number
+	if strings.HasPrefix(req.PesertaID, "MJ") {
+		// Is Custom ID
 		errPeserta = config.DB.Where("id = ?", req.PesertaID).First(&peserta).Error
 	} else {
 		// Is likely Phone Number

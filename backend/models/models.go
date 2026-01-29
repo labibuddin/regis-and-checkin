@@ -7,7 +7,7 @@ import (
 )
 
 type Peserta struct {
-	ID                       uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primaryKey" json:"id"`
+	ID                       string    `gorm:"type:varchar(50);primaryKey" json:"id"`
 	NamaLengkap              string    `json:"nama_lengkap"`
 	Panggilan                string    `json:"panggilan"`
 	JenisKelamin             string    `json:"jenis_kelamin"`
@@ -30,7 +30,7 @@ type Kegiatan struct {
 
 type Presensi struct {
 	ID           uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primaryKey" json:"id"`
-	PesertaID    uuid.UUID `json:"peserta_id"`
+	PesertaID    string    `json:"peserta_id"`
 	Peserta      Peserta   `gorm:"foreignKey:PesertaID" json:"peserta"`
 	KegiatanID   uuid.UUID `json:"kegiatan_id"`
 	Kegiatan     Kegiatan  `gorm:"foreignKey:KegiatanID" json:"kegiatan"`

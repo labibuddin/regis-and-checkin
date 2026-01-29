@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Configuration
-URL="http://localhost:1966"
+URL="http://localhost:3000"
 BIN_NAME="cloudflared"
 
 # Function to check dependencies

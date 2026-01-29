@@ -1,17 +1,23 @@
 <template>
-  <div class="fixed inset-0 bg-black flex flex-col">
+  <div class="fixed inset-0 w-full h-[100dvh] bg-black flex flex-col z-50 overflow-hidden">
     <!-- Camera View -->
-    <div class="relative flex-1 bg-black overflow-hidden">
+    <div class="relative flex-1 bg-black overflow-hidden flex items-center justify-center">
       <video ref="videoElem" class="absolute inset-0 w-full h-full object-cover"></video>
       
-      <!-- Helper Frame -->
-      <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+      <!-- Helpers -->
+      <div v-if="!cameraError" class="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
         <div class="w-64 h-64 border-2 border-white/50 rounded-3xl relative">
           <div class="absolute top-0 left-0 w-6 h-6 border-t-4 border-l-4 border-green-500 rounded-tl-xl"></div>
           <div class="absolute top-0 right-0 w-6 h-6 border-t-4 border-r-4 border-green-500 rounded-tr-xl"></div>
           <div class="absolute bottom-0 left-0 w-6 h-6 border-b-4 border-l-4 border-green-500 rounded-bl-xl"></div>
           <div class="absolute bottom-0 right-0 w-6 h-6 border-b-4 border-r-4 border-green-500 rounded-br-xl"></div>
         </div>
+      </div>
+
+      <!-- Error State -->
+      <div v-if="cameraError" class="z-10 p-8 text-center text-white/80 max-w-sm mx-auto">
+          <div class="text-4xl mb-4">📷🚫</div>
+          <p class="text-lg font-medium breakdown-words">{{ cameraError }}</p>
       </div>
 
       <!-- Feedback Overlay -->
@@ -23,10 +29,12 @@
     </div>
 
     <!-- Manual Input Section -->
-    <div class="bg-white p-6 rounded-t-3xl shadow-[0_-4px_20px_rgba(0,0,0,0.2)] z-10">
-      <form @submit.prevent="handleManualSubmit" class="flex gap-2">
-        <input v-model="manualId" placeholder="Input ID / No HP Manual" class="flex-1 bg-gray-100 border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-green-500 outline-none">
-        <button type="submit" class="bg-green-600 text-white px-6 rounded-xl font-bold">Check-In</button>
+    <div class="bg-white p-6 pb-8 md:pb-6 rounded-t-3xl shadow-[0_-4px_20px_rgba(0,0,0,0.2)] z-10 safe-bottom">
+      <form @submit.prevent="handleManualSubmit" class="flex gap-2 w-full">
+        <input v-model="manualId" placeholder="Input ID / No HP" class="flex-1 min-w-0 bg-gray-100 border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-green-500 outline-none text-lg">
+        <button type="submit" class="bg-green-600 active:scale-95 transition-transform text-white px-6 py-3 rounded-xl font-bold whitespace-nowrap shrink-0">
+            Check-In
+        </button>
       </form>
     </div>
   </div>
@@ -42,6 +50,7 @@ const scanner = ref(null)
 const manualId = ref('')
 const feedback = ref(null)
 const isProcessing = ref(false)
+const cameraError = ref('')
 
 onMounted(() => {
   initScanner()
@@ -51,17 +60,22 @@ onUnmounted(() => {
   if (scanner.value) scanner.value.destroy()
 })
 
-const initScanner = () => {
-  scanner.value = new QrScanner(
-    videoElem.value,
-    result => handleScan(result.data),
-    {
-      highlightScanRegion: true,
-      highlightCodeOutline: true,
-      returnDetailedScanResult: true
-    }
-  )
-  scanner.value.start()
+const initScanner = async () => {
+  try {
+      scanner.value = new QrScanner(
+        videoElem.value,
+        result => handleScan(result.data),
+        {
+          highlightScanRegion: true,
+          highlightCodeOutline: true,
+          returnDetailedScanResult: true
+        }
+      )
+      await scanner.value.start()
+  } catch (err) {
+      console.error(err)
+      cameraError.value = "Kamera tidak dapat diakses. Pastikan menggunakan HTTPS atau localhost, dan izinkan akses kamera."
+  }
 }
 
 const handleScan = async (data) => {

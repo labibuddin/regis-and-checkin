@@ -33,10 +33,10 @@ Cara termudah untuk menjalankan seluruh aplikasi (Database, Backend, dan Fronten
     Script ini akan:
     - Menyalakan container database `db` via Docker Compose.
     - Menjalankan Backend Go di port `:8080`.
-    - Menjalankan Frontend Vite di port `:1966`.
+    - Menjalankan Frontend Vite di port `:3000`.
 
 4.  **Akses Aplikasi**:
-    - **Frontend**: [http://localhost:1966](http://localhost:1966)
+    - **Frontend**: [http://localhost:3000](http://localhost:3000)
     - **Backend API**: [http://localhost:8080](http://localhost:8080)
     
     *Tips: Tekan `Ctrl+C` di terminal untuk mematikan semua service.*
@@ -70,7 +70,7 @@ Aplikasi ini juga sudah dikonfigurasi untuk bisa diakses langsung via IP dalam s
 
 1.  Jalankan aplikasi dengan `./scripts/start-all.sh`.
 2.  Lihat output terminal bagian "Network".
-3.  Buka URL IP address (misal `http://192.168.1.x:1966`) di browser perangkat lain.
+3.  Buka URL IP address (misal `http://192.168.1.x:3000`) di browser perangkat lain.
 
 ---
 
